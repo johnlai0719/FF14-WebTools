@@ -8,8 +8,6 @@ import {
 } from 'lucide-react';
 import './App.css'
 
-// --- 資料定義 ---
-
 const linkCategories = [
   {
     id: "wiki", title: "百科", icon: <BookOpen size={22} className="icon-gold" />,
@@ -65,8 +63,6 @@ const aetherData = [
     ]
   }
 ];
-
-// --- 主要頁面組件 ---
 
 function Home() {
   const [openIds, setOpenIds] = useState<Set<string>>(new Set(["wiki", "life", "battle"]));
@@ -154,7 +150,6 @@ function AetherTracker() {
     localStorage.setItem('ff14-aether-progress', JSON.stringify(Array.from(newChecked)));
   };
 
-  // 當切換版本時，自動選中該版本的第一個地圖
   useEffect(() => {
     if (activeExp) {
       setActiveZoneId(activeExp.zones[0].id);
