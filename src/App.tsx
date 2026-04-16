@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { HashRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
 import { 
   BookOpen, ShoppingCart, Swords, Search, ChevronDown, ChevronUp, 
-  MapPin, CheckCircle2, Circle, ArrowLeft, BarChart3, Compass, 
-  LayoutGrid, Info, ImageIcon, Zap, Loader2, MousePointer2, 
+  MapPin, CheckCircle2, Circle, ArrowLeft, BarChart3, 
+  Zap, Loader2, 
   ExternalLink, Globe, Library, Database, Box, Map, Clock, 
   Fish, Banknote, Shirt, Gamepad2, Hammer, Sparkles 
 } from 'lucide-react';
