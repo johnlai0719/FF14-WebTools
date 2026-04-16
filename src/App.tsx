@@ -1,9 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
 import { 
   BookOpen, ShoppingCart, Swords, Search, ChevronDown, ChevronUp, 
   MapPin, CheckCircle2, Circle, ArrowLeft, BarChart3, 
-  Zap, Loader2, 
   ExternalLink, Globe, Library, Database, Box, Map, Clock, 
   Fish, Banknote, Shirt, Gamepad2, Hammer, Sparkles 
 } from 'lucide-react';
@@ -66,41 +65,6 @@ const aetherData = [
     ]
   }
 ];
-
-const WIN_LINES = [
-  [0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11], [12, 13, 14, 15],
-  [0, 4, 8, 12], [1, 5, 9, 13], [2, 6, 10, 14], [3, 7, 11, 15],
-  [0, 5, 10, 15], [3, 6, 9, 12]
-];
-
-function calculateProbabilities(currentStickers: number[]) {
-  const count = currentStickers.length;
-  if (count < 1) return { 1: "0.0", 2: "0.0", 3: "0.0" };
-  const remaining = 9 - count;
-  if (remaining < 0) return { 1: "0.0", 2: "0.0", 3: "0.0" };
-  const allCells = Array.from({ length: 16 }, (_, i) => i);
-  const emptyCells = allCells.filter(i => !currentStickers.includes(i));
-  const getCombinations = (array: number[], k: number): number[][] => {
-    if (k === 0) return [[]];
-    const result: number[][] = [];
-    for (let i = 0; i < array.length; i++) {
-      const rest = getCombinations(array.slice(i + 1), k - 1);
-      for (const r of rest) result.push([array[i], ...r]);
-    }
-    return result;
-  };
-  const possibleFillings = getCombinations(emptyCells, remaining);
-  let stats = { 1: 0, 2: 0, 3: 0, total: possibleFillings.length };
-  possibleFillings.forEach(fill => {
-    const finalState = [...currentStickers, ...fill];
-    let lines = 0;
-    WIN_LINES.forEach(line => { if (line.every(cell => finalState.includes(cell))) lines++; });
-    if (lines >= 1) stats[1]++;
-    if (lines >= 2) stats[2]++;
-    if (lines >= 3) stats[3]++;
-  });
-  return { 1: ((stats[1] / stats.total) * 100).toFixed(1), 2: ((stats[2] / stats.total) * 100).toFixed(1), 3: ((stats[3] / stats.total) * 100).toFixed(1) };
-}
 
 // --- 主要頁面組件 ---
 
