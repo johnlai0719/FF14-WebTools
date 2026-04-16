@@ -13,31 +13,31 @@ import './App.css'
 
 const linkCategories = [
   {
-    id: "wiki", title: "綜合與百科", icon: <BookOpen size={22} className="icon-gold" />,
+    id: "wiki", title: "百科", icon: <BookOpen size={22} className="icon-gold" />,
     links: [
-      { name: "灰機 Wiki", url: "https://ff14.huijiwiki.com/", desc: "最全的資料大全", icon: <Library size={24} className="icon-gold" /> },
-      { name: "物品搜尋", url: "https://ff14.huijiwiki.com/wiki/ItemSearch", desc: "快速查找物品資料", icon: <Search size={24} className="icon-gold" /> },
-      { name: "Garland Tools", url: "https://www.garlandtools.org/", desc: "物品資料庫", icon: <Database size={24} className="icon-gold" /> },
-      { name: "台服工具箱", url: "https://ff14.tw/", desc: "在地化實用工具", icon: <Box size={24} className="icon-gold" /> },
-      { name: "藏寶圖網站", url: "https://cycleapple.github.io/xiv-tc-treasure-finder/", desc: "快速對比寶藏點", icon: <Map size={24} className="icon-gold" /> },
+      { name: "灰機 Wiki", url: "https://ff14.huijiwiki.com/", desc: "最全資料庫", icon: <Library size={24} className="icon-gold" /> },
+      { name: "物品搜尋", url: "https://ff14.huijiwiki.com/wiki/ItemSearch", desc: "快速查找", icon: <Search size={24} className="icon-gold" /> },
+      { name: "Garland", url: "https://www.garlandtools.org/", desc: "物品資料庫", icon: <Database size={24} className="icon-gold" /> },
+      { name: "工具箱", url: "https://ff14.tw/", desc: "在地化工具", icon: <Box size={24} className="icon-gold" /> },
+      { name: "藏寶圖", url: "https://cycleapple.github.io/xiv-tc-treasure-finder/", desc: "座標對比", icon: <Map size={24} className="icon-gold" /> },
     ]
   },
   {
-    id: "life", title: "生活與交易", icon: <ShoppingCart size={22} className="icon-gold" />,
+    id: "life", title: "生活", icon: <ShoppingCart size={22} className="icon-gold" />,
     links: [
-      { name: "採集時鐘", url: "https://caiji.ffxiv.cn/", desc: "限時節點提醒", icon: <Clock size={24} className="icon-gold" /> },
-      { name: "魚糕", url: "https://ff14fish.com/", desc: "釣魚神器", icon: <Fish size={24} className="icon-gold" /> },
-      { name: "Universalis", url: "https://universalis.app/", desc: "全服交易價格查詢", icon: <Banknote size={24} className="icon-gold" /> },
-      { name: "FFXIV Market", url: "https://beherw.github.io/FFXIV_Market/", desc: "交易市場查看工具", icon: <ShoppingCart size={24} className="icon-gold" /> },
-      { name: "Eorzea Collection", url: "https://ffxiv.eorzeacollection.com/", desc: "幻化穿搭參考", icon: <Shirt size={24} className="icon-gold" /> },
+      { name: "採集時鐘", url: "https://caiji.ffxiv.cn/", desc: "節點提醒", icon: <Clock size={24} className="icon-gold" /> },
+      { name: "魚糕", url: "https://ff14fish.com/", desc: "釣魚工具", icon: <Fish size={24} className="icon-gold" /> },
+      { name: "Universalis", url: "https://universalis.app/", desc: "市場價格", icon: <Banknote size={24} className="icon-gold" /> },
+      { name: "Market", url: "https://beherw.github.io/FFXIV_Market/", desc: "交易查看", icon: <ShoppingCart size={24} className="icon-gold" /> },
+      { name: "幻化穿搭", url: "https://ffxiv.eorzeacollection.com/", desc: "風格參考", icon: <Shirt size={24} className="icon-gold" /> },
     ]
   },
   {
-    id: "battle", title: "戰鬥與工具", icon: <Swords size={22} className="icon-gold" />,
+    id: "battle", title: "戰鬥", icon: <Swords size={22} className="icon-gold" />,
     links: [
-      { name: "副本機制模擬器", url: "https://www.xivsim.com/", desc: "高難副本練習", icon: <Gamepad2 size={24} className="icon-gold" /> },
-      { name: "Teamcraft", url: "https://ffxivteamcraft.com/", desc: "巨集與清單生成", icon: <Hammer size={24} className="icon-gold" /> },
-      { name: "青魔技能大全", url: "https://thewakingsands.github.io/blue-mage/", desc: "技能獲取途徑", icon: <Sparkles size={24} className="icon-gold" /> },
+      { name: "機制模擬", url: "https://www.xivsim.com/", desc: "副本練習", icon: <Gamepad2 size={24} className="icon-gold" /> },
+      { name: "Teamcraft", url: "https://ffxivteamcraft.com/", desc: "製作清單", icon: <Hammer size={24} className="icon-gold" /> },
+      { name: "青魔技能", url: "https://thewakingsands.github.io/blue-mage/", desc: "獲取途徑", icon: <Sparkles size={24} className="icon-gold" /> },
     ]
   }
 ];
