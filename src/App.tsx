@@ -134,6 +134,26 @@ function AetherTracker() {
   const activeExp = aetherData.find(e => e.id === activeExpId);
   const activeZone = activeExp?.zones.find(z => z.id === activeZoneId);
 
+  const markAllInZone = () => {
+    if (!activeZone) return;
+    const newChecked = new Set(checkedCoords);
+    activeZone.coords.forEach(coord => {
+      newChecked.add(`${activeExpId}-${activeZone.zone}-${coord}`);
+    });
+    setCheckedCoords(newChecked);
+    localStorage.setItem('ff14-aether-progress', JSON.stringify(Array.from(newChecked)));
+  };
+
+  const resetZone = () => {
+    if (!activeZone) return;
+    const newChecked = new Set(checkedCoords);
+    activeZone.coords.forEach(coord => {
+      newChecked.delete(`${activeExpId}-${activeZone.zone}-${coord}`);
+    });
+    setCheckedCoords(newChecked);
+    localStorage.setItem('ff14-aether-progress', JSON.stringify(Array.from(newChecked)));
+  };
+
   // 當切換版本時，自動選中該版本的第一個地圖
   useEffect(() => {
     if (activeExp) {
@@ -170,7 +190,11 @@ function AetherTracker() {
             <>
               <header className="coord-header">
                 <h2>{activeZone.zone}</h2>
-                <div className="coord-stats">已收集: {activeZone.coords.filter(c => checkedCoords.has(`${activeExpId}-${activeZone.zone}-${c}`)).length} / {activeZone.coords.length}</div>
+                <div className="coord-actions">
+                  <button className="mini-btn" onClick={markAllInZone}>本區全選</button>
+                  <button className="mini-btn reset" onClick={resetZone}>重置本區</button>
+                  <div className="coord-stats">已收集: {activeZone.coords.filter(c => checkedCoords.has(`${activeExpId}-${activeZone.zone}-${c}`)).length} / {activeZone.coords.length}</div>
+                </div>
               </header>
               <div className="coords-grid-wide">
                 {activeZone.coords.map((coord, idx) => {
