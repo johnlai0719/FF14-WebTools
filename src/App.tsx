@@ -121,8 +121,7 @@ function Home() {
       </header>
 
       <div className="main-cta-group">
-        <Link to="/aether" className="cta-button"><Globe size={24} className="icon-gold" /><span>風脈泉追蹤</span></Link>
-        <Link to="/tails" className="cta-button highlight-btn"><Zap size={24} className="icon-gold" /><span>天書奇談助手 (AI 辨識)</span></Link>
+        <Link to="/aether" className="cta-button highlight-btn"><Globe size={24} /><span>風脈泉追蹤</span></Link>
       </div>
 
       <div className="horizontal-container">
@@ -229,95 +228,12 @@ function AetherTracker() {
   );
 }
 
-function WondrousTails() {
-  const [stickers, setStickers] = useState<number[]>([]);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const navigate = useNavigate();
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  const processImage = (img: HTMLImageElement) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
-    if (!ctx) return;
-    const scale = Math.min(1000 / img.width, 1);
-    canvas.width = img.width * scale; canvas.height = img.height * scale;
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-    const activePixels: {x: number, y: number, weight: number}[] = [];
-    for (let i = 0; i < data.length; i += 4) {
-      const r = data[i], g = data[i+1], b = data[i+2];
-      const brightness = (r + g + b) / 3;
-      if (brightness > 140 && r > b && g > b * 0.7) {
-        const pxIdx = i / 4; activePixels.push({ x: pxIdx % canvas.width, y: Math.floor(pxIdx / canvas.width), weight: brightness });
-      }
-    }
-    const clusters: {x: number, y: number, count: number, totalWeight: number}[] = [];
-    activePixels.forEach(p => {
-      let found = false;
-      for (const c of clusters) { if (Math.pow(p.x - c.x, 2) + Math.pow(p.y - c.y, 2) < 1600) { c.x = (c.x * c.count + p.x) / (c.count + 1); c.y = (c.y * c.count + p.y) / (c.count + 1); c.totalWeight += p.weight; c.count++; found = true; break; } }
-      if (!found) clusters.push({...p, count: 1, totalWeight: p.weight});
-    });
-    const topClusters = clusters.sort((a, b) => b.totalWeight - a.totalWeight).slice(0, 9).filter(c => c.count > 25);
-    if (topClusters.length === 0) { setIsProcessing(false); return; }
-    const minX = Math.min(...topClusters.map(c => c.x)), maxX = Math.max(...topClusters.map(c => c.x)), minY = Math.min(...topClusters.map(c => c.y)), maxY = Math.max(...topClusters.map(c => c.y));
-    const results = new Set<number>();
-    topClusters.forEach(c => { const col = Math.min(Math.round(((c.x - minX) / (maxX - minX)) * 3), 3); const row = Math.min(Math.round(((c.y - minY) / (maxY - minY)) * 3), 3); results.add(row * 4 + col); });
-    setStickers(Array.from(results)); setIsProcessing(false);
-  };
-
-  const handlePaste = (e: ClipboardEvent) => {
-    const items = e.clipboardData?.items;
-    if (!items) return;
-    for (const item of Array.from(items)) { if (item.type.indexOf('image') !== -1) { const blob = item.getAsFile(); if (blob) { setIsProcessing(true); const img = new Image(); img.src = URL.createObjectURL(blob); img.onload = () => { processImage(img); URL.revokeObjectURL(img.src); }; } } }
-  };
-
-  useEffect(() => { window.addEventListener('paste', handlePaste); return () => window.removeEventListener('paste', handlePaste); }, []);
-  const probs = calculateProbabilities(stickers);
-
-  return (
-    <div className="page-container tails-page fade-in">
-      <nav className="top-nav">
-        <button onClick={() => navigate('/')} className="back-link"><ArrowLeft size={18} /> 返回</button>
-        <div className="tails-info"><Zap size={16} className="icon-gold" /><span>貼上截圖即刻辨識印花</span></div>
-      </nav>
-      <div className="tails-layout">
-        <div className="book-side">
-          <div className="wt-book-ui">
-            <div className="wt-grid-ornament">
-              {Array.from({ length: 16 }).map((_, i) => (
-                <div key={i} className={`wt-cell-rich ${stickers.includes(i) ? 'has-sticker' : ''}`} onClick={() => stickers.includes(i) ? setStickers(stickers.filter(s => s !== i)) : (stickers.length < 9 && setStickers([...stickers, i]))}>
-                  {stickers.includes(i) && <div className="sticker-illustration"><img src="https://ff14.huijiwiki.com/images/thumb/8/84/%E5%BA%93%E6%B4%9B%E7%9A%84%E5%8D%B0%E8%8A%B1.png/60px-%E5%BA%93%E6%B4%9B%E7%9A%84%E5%8D%B0%E8%8A%B1.png" alt="" /></div>}
-                </div>
-              ))}
-            </div>
-            {isProcessing && <div className="wt-loader-overlay"><Loader2 className="animate-spin" size={48} /><span>分析中...</span></div>}
-          </div>
-          <button className="reset-tails" onClick={() => setStickers([])}>清空重置手冊</button>
-        </div>
-        <div className="result-side">
-          <div className="prob-card-rich">
-            <h2 className="prob-title">連線勝率預測</h2>
-            <div className="prob-rows">
-              <div className="prob-row"><span>1 條連線</span><strong>{probs[1]}%</strong></div>
-              <div className="prob-row high-2"><span>2 條連線</span><strong>{probs[2]}%</strong></div>
-              <div className="prob-row high-3"><span>3 條連線</span><strong>{probs[3]}%</strong></div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <canvas ref={canvasRef} style={{ display: 'none' }} />
-    </div>
-  );
-}
-
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/aether" element={<AetherTracker />} />
-        <Route path="/tails" element={<WondrousTails />} />
       </Routes>
     </Router>
   );
