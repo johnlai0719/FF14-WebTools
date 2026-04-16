@@ -1,0 +1,326 @@
+import { useState, useEffect, useRef } from 'react';
+import { HashRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
+import { 
+  BookOpen, ShoppingCart, Swords, Search, ChevronDown, ChevronUp, 
+  MapPin, CheckCircle2, Circle, ArrowLeft, BarChart3, Compass, 
+  LayoutGrid, Info, ImageIcon, Zap, Loader2, MousePointer2, 
+  ExternalLink, Globe, Library, Database, Box, Map, Clock, 
+  Fish, Banknote, Shirt, Gamepad2, Hammer, Sparkles 
+} from 'lucide-react';
+import './App.css'
+
+// --- 資料定義 ---
+
+const linkCategories = [
+  {
+    id: "wiki", title: "綜合與百科", icon: <BookOpen size={22} className="icon-gold" />,
+    links: [
+      { name: "灰機 Wiki", url: "https://ff14.huijiwiki.com/", desc: "最全的資料大全", icon: <Library size={24} className="icon-gold" /> },
+      { name: "物品搜尋", url: "https://ff14.huijiwiki.com/wiki/ItemSearch", desc: "快速查找物品資料", icon: <Search size={24} className="icon-gold" /> },
+      { name: "Garland Tools", url: "https://www.garlandtools.org/", desc: "物品資料庫", icon: <Database size={24} className="icon-gold" /> },
+      { name: "台服工具箱", url: "https://ff14.tw/", desc: "在地化實用工具", icon: <Box size={24} className="icon-gold" /> },
+      { name: "藏寶圖網站", url: "https://cycleapple.github.io/xiv-tc-treasure-finder/", desc: "快速對比寶藏點", icon: <Map size={24} className="icon-gold" /> },
+    ]
+  },
+  {
+    id: "life", title: "生活與交易", icon: <ShoppingCart size={22} className="icon-gold" />,
+    links: [
+      { name: "採集時鐘", url: "https://caiji.ffxiv.cn/", desc: "限時節點提醒", icon: <Clock size={24} className="icon-gold" /> },
+      { name: "魚糕", url: "https://ff14fish.com/", desc: "釣魚神器", icon: <Fish size={24} className="icon-gold" /> },
+      { name: "Universalis", url: "https://universalis.app/", desc: "全服交易價格查詢", icon: <Banknote size={24} className="icon-gold" /> },
+      { name: "FFXIV Market", url: "https://beherw.github.io/FFXIV_Market/", desc: "交易市場查看工具", icon: <ShoppingCart size={24} className="icon-gold" /> },
+      { name: "Eorzea Collection", url: "https://ffxiv.eorzeacollection.com/", desc: "幻化穿搭參考", icon: <Shirt size={24} className="icon-gold" /> },
+    ]
+  },
+  {
+    id: "battle", title: "戰鬥與工具", icon: <Swords size={22} className="icon-gold" />,
+    links: [
+      { name: "副本機制模擬器", url: "https://www.xivsim.com/", desc: "高難副本練習", icon: <Gamepad2 size={24} className="icon-gold" /> },
+      { name: "Teamcraft", url: "https://ffxivteamcraft.com/", desc: "巨集與清單生成", icon: <Hammer size={24} className="icon-gold" /> },
+      { name: "青魔技能大全", url: "https://thewakingsands.github.io/blue-mage/", desc: "技能獲取途徑", icon: <Sparkles size={24} className="icon-gold" /> },
+    ]
+  }
+];
+
+const aetherData = [
+  {
+    expansion: "7.0 黃金的遺產", id: "7.0",
+    zones: [
+      { id: "z7-1", zone: "奧羅帕尼山 (Urqopacha)", coords: ["(X: 28.6, Y: 16.7, Z: 1.1)", "(X: 12.2, Y: 11.5, Z: 1.9)", "(X: 17.9, Y: 20.5, Z: 1.2)", "(X: 17.3, Y: 17.4, Z: 1.5)", "(X: 28.8, Y: 7.8, Z: 0.8)", "(X: 18.7, Y: 9.7, Z: 1.2)", "(X: 29.1, Y: 21.3, Z: 2.8)", "(X: 29.4, Y: 26.6, Z: 3)"] },
+      { id: "z7-2", zone: "克扎爾烏卡濕地 (Kozama'uka)", coords: ["(X: 27.3, Y: 7.6, Z: 0)", "(X: 9.8, Y: 17.9, Z: 0)", "(X: 15.5, Y: 34.2, Z: 1.1)", "(X: 8.6, Y: 11.7, Z: 0)", "(X: 39.6, Y: 13.6, Z: 0.1)", "(X: 31.8, Y: 14.5, Z: 1.3)", "(X: 24, Y: 31.9, Z: 1.1)", "(X: 31.3, Y: 38, Z: 1.2)"] },
+      { id: "z7-3", zone: "亞克特爾樹海 (Yak T'el)", coords: ["(X: 19.1, Y: 11, Z: 3)", "(X: 29.7, Y: 10.6, Z: 3.1)", "(X: 19.2, Y: 33.8, Z: 0.8)", "(X: 10.2, Y: 18.6, Z: 2.9)", "(X: 17.7, Y: 6.3, Z: 3.2)", "(X: 33.9, Y: 26.2, Z: 1.5)", "(X: 25.4, Y: 24.4, Z: 1)", "(X: 36.3, Y: 35.4, Z: 1.2)"] },
+      { id: "z7-4", zone: "夏勞尼荒野 (Shaaloani)", coords: ["(X: 27.3, Y: 31.6, Z: 0.7)", "(X: 7.2, Y: 19.8, Z: 1)", "(X: 20.1, Y: 17.7, Z: 0.9)", "(X: 28.1, Y: 14.3, Z: 1.1)", "(X: 17.6, Y: 20.4, Z: 1.1)", "(X: 8.6, Y: 27.9, Z: 0.6)", "(X: 34, Y: 27.9, Z: 0.8)", "(X: 34.3, Y: 22.9, Z: 0.9)"] },
+      { id: "z7-5", zone: "遺產之地 (Heritage Found)", coords: ["(X: 29.4, Y: 26, Z: 1.6)", "(X: 25.6, Y: 8.3, Z: 0.7)", "(X: 9.7, Y: 12.1, Z: 0.3)", "(X: 33.6, Y: 17.6, Z: 1.4)", "(X: 35.2, Y: 11.1, Z: 1.5)", "(X: 15.8, Y: 16.1, Z: 0.5)", "(X: 15.8, Y: 16.1, Z: 0.7)", "(X: 12.5, Y: 35.4, Z: 0)"] },
+      { id: "z7-6", zone: "活著的記憶 (Living Memory)", coords: ["(X: 7.6, Y: 30.8, Z: 0.2)", "(X: 36.4, Y: 28.3, Z: 0.6)", "(X: 10.8, Y: 8.3, Z: 0.5)", "(X: 25.9, Y: 32.6, Z: 0.2)", "(X: 33.7, Y: 34.3, Z: 0.2)", "(X: 27.6, Y: 10.5, Z: 0.2)", "(X: 27.6, Y: 10.5, Z: 0.5)", "(X: 12.1, Y: 20.5, Z: 0.5)"] }
+    ]
+  },
+  {
+    expansion: "6.0 曉月之終途", id: "6.0",
+    zones: [
+      { id: "z6-1", zone: "迷津 (Labyrinthos)", coords: ["(X: 28.4, Y: 6.1, Z: 4.3)", "(X: 36.3, Y: 22.6, Z: 3.3)", "(X: 10.5, Y: 34.7, Z: 2.0)", "(X: 18.9, Y: 35.0, Z: 2.0)"] },
+      { id: "z6-2", zone: "薩維奈島 (Thavnair)", coords: ["(X: 18.0, Y: 32.2, Z: 0.2)", "(X: 20.0, Y: 7.3, Z: 0.9)", "(X: 23.8, Y: 14.6, Z: 0.0)", "(X: 32.4, Y: 14.6, Z: 0.0)"] },
+      { id: "z6-3", zone: "加雷馬 (Garlemald)", coords: ["(X: 17.8, Y: 29.9, Z: 0.5)", "(X: 25.5, Y: 33.9, Z: 0.0)", "(X: 29.1, Y: 11.8, Z: 0.4)", "(X: 9.3, Y: 14.9, Z: 0.0)"] },
+      { id: "z6-4", zone: "嘆息海 (Mare Lamentorum)", coords: ["(X: 22.3, Y: 18.1, Z: 1.2)", "(X: 11.8, Y: 9.5, Z: -1.6)", "(X: 27.8, Y: 9.7, Z: -1.6)", "(X: 2.1, Y: 0.0)"] },
+      { id: "z6-5", zone: "厄爾庇斯 (Elpis)", coords: ["(X: 34.0, Y: 23.7, Z: 1.6)", "(X: 6.4, Y: 29.7, Z: 1.2)", "(X: 13.3, Y: 7.6, Z: 4.8)", "(X: 16.3, Y: 11.8, Z: 3.0)"] },
+      { id: "z6-6", zone: "天外天垓 (Ultima Thule)", coords: ["(X: 14.7, Y: 14.2, Z: 2.2)", "(X: 21.5, Y: 6.2, Z: 2.3)", "(X: 34.5, Y: 29.5, Z: 3.9)", "(X: 32.2, Y: 26.2, Z: 3.9)"] }
+    ]
+  }
+];
+
+const WIN_LINES = [
+  [0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11], [12, 13, 14, 15],
+  [0, 4, 8, 12], [1, 5, 9, 13], [2, 6, 10, 14], [3, 7, 11, 15],
+  [0, 5, 10, 15], [3, 6, 9, 12]
+];
+
+function calculateProbabilities(currentStickers: number[]) {
+  const count = currentStickers.length;
+  if (count < 1) return { 1: "0.0", 2: "0.0", 3: "0.0" };
+  const remaining = 9 - count;
+  if (remaining < 0) return { 1: "0.0", 2: "0.0", 3: "0.0" };
+  const allCells = Array.from({ length: 16 }, (_, i) => i);
+  const emptyCells = allCells.filter(i => !currentStickers.includes(i));
+  const getCombinations = (array: number[], k: number): number[][] => {
+    if (k === 0) return [[]];
+    const result: number[][] = [];
+    for (let i = 0; i < array.length; i++) {
+      const rest = getCombinations(array.slice(i + 1), k - 1);
+      for (const r of rest) result.push([array[i], ...r]);
+    }
+    return result;
+  };
+  const possibleFillings = getCombinations(emptyCells, remaining);
+  let stats = { 1: 0, 2: 0, 3: 0, total: possibleFillings.length };
+  possibleFillings.forEach(fill => {
+    const finalState = [...currentStickers, ...fill];
+    let lines = 0;
+    WIN_LINES.forEach(line => { if (line.every(cell => finalState.includes(cell))) lines++; });
+    if (lines >= 1) stats[1]++;
+    if (lines >= 2) stats[2]++;
+    if (lines >= 3) stats[3]++;
+  });
+  return { 1: ((stats[1] / stats.total) * 100).toFixed(1), 2: ((stats[2] / stats.total) * 100).toFixed(1), 3: ((stats[3] / stats.total) * 100).toFixed(1) };
+}
+
+// --- 主要頁面組件 ---
+
+function Home() {
+  const [openIds, setOpenIds] = useState<Set<string>>(new Set(["wiki", "life", "battle"]));
+  const toggleCategory = (id: string) => {
+    const n = new Set(openIds);
+    n.has(id) ? n.delete(id) : n.add(id);
+    setOpenIds(n);
+  };
+
+  return (
+    <div className="page-container fade-in">
+      <header className="header">
+        <div className="header-logo"><Search size={32} className="icon-gold animate-glow" /></div>
+        <h1>FFXIV 快速導航儀表板</h1>
+        <p className="subtitle">艾歐澤亞的光之戰士專用工具箱</p>
+      </header>
+
+      <div className="main-cta-group">
+        <Link to="/aether" className="cta-button"><Globe size={24} className="icon-gold" /><span>風脈泉追蹤</span></Link>
+        <Link to="/tails" className="cta-button highlight-btn"><Zap size={24} className="icon-gold" /><span>天書奇談助手 (AI 辨識)</span></Link>
+      </div>
+
+      <div className="horizontal-container">
+        {linkCategories.map((cat) => (
+          <div key={cat.id} className={`column-item ${openIds.has(cat.id) ? 'active' : ''}`}>
+            <button className="column-header" onClick={() => toggleCategory(cat.id)}>
+              <div className="header-left"><span className="icon-wrapper">{cat.icon}</span><span className="category-name">{cat.title}</span></div>
+              {openIds.has(cat.id) ? <ChevronUp size={18} className="icon-gold" /> : <ChevronDown size={18} />}
+            </button>
+            <div className="column-content">
+              <div className="links-list">
+                {cat.links.map((link, lIdx) => (
+                  <a key={lIdx} href={link.url} target="_blank" rel="noopener noreferrer" className="nav-button-rich">
+                    <div className="link-icon-box">{link.icon}</div>
+                    <div className="button-content"><span className="button-name">{link.name}</span><span className="button-desc">{link.desc}</span></div>
+                    <ExternalLink size={14} className="ext-icon" />
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AetherTracker() {
+  const [checkedCoords, setCheckedCoords] = useState<Set<string>>(new Set());
+  const [activeExpId, setActiveExpId] = useState("7.0");
+  const [activeZoneId, setActiveZoneId] = useState("z7-1");
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const saved = localStorage.getItem('ff14-aether-progress');
+    if (saved) setCheckedCoords(new Set(JSON.parse(saved)));
+  }, []);
+
+  const toggleCoord = (coordId: string) => {
+    const newChecked = new Set(checkedCoords);
+    newChecked.has(coordId) ? newChecked.delete(coordId) : newChecked.add(coordId);
+    setCheckedCoords(newChecked);
+    localStorage.setItem('ff14-aether-progress', JSON.stringify(Array.from(newChecked)));
+  };
+
+  const activeExp = aetherData.find(e => e.id === activeExpId);
+  const activeZone = activeExp?.zones.find(z => z.id === activeZoneId);
+
+  // 當切換版本時，自動選中該版本的第一個地圖
+  useEffect(() => {
+    if (activeExp) {
+      setActiveZoneId(activeExp.zones[0].id);
+    }
+  }, [activeExpId]);
+
+  const totalCoords = aetherData.reduce((sum, exp) => sum + exp.zones.reduce((zSum, zone) => zSum + zone.coords.length, 0), 0);
+  const progressPercent = Math.round((checkedCoords.size / totalCoords) * 100);
+
+  return (
+    <div className="page-container aether-page fade-in">
+      <nav className="top-nav">
+        <button onClick={() => navigate('/')} className="back-link"><ArrowLeft size={18} /> 返回儀表板</button>
+        <div className="exp-tabs">
+          {aetherData.map(exp => (
+            <button key={exp.id} className={`exp-tab ${activeExpId === exp.id ? 'active' : ''}`} onClick={() => setActiveExpId(exp.id)}>{exp.expansion}</button>
+          ))}
+        </div>
+        <div className="progress-mini"><BarChart3 size={16} className="icon-gold" /><span>進度 {progressPercent}%</span></div>
+      </nav>
+
+      <div className="tracker-layout-horizontal">
+        <aside className="zone-sidebar">
+          {activeExp?.zones.map(zone => (
+            <button key={zone.id} className={`zone-menu-item ${activeZoneId === zone.id ? 'active' : ''}`} onClick={() => setActiveZoneId(zone.id)}>
+              <MapPin size={16} className={activeZoneId === zone.id ? "icon-gold" : ""} /><span>{zone.zone.split(' (')[0]}</span>
+            </button>
+          ))}
+        </aside>
+
+        <main className="coord-display-area">
+          {activeZone && (
+            <>
+              <header className="coord-header">
+                <h2>{activeZone.zone}</h2>
+                <div className="coord-stats">已收集: {activeZone.coords.filter(c => checkedCoords.has(`${activeExpId}-${activeZone.zone}-${c}`)).length} / {activeZone.coords.length}</div>
+              </header>
+              <div className="coords-grid-wide">
+                {activeZone.coords.map((coord, idx) => {
+                  const id = `${activeExpId}-${activeZone.zone}-${coord}`;
+                  const isChecked = checkedCoords.has(id);
+                  return (
+                    <div key={idx} className={`coord-card-wide ${isChecked ? 'checked' : ''}`} onClick={() => toggleCoord(id)}>
+                      <div className="coord-checkbox">{isChecked ? <CheckCircle2 size={24} className="icon-gold" /> : <Circle size={24} className="icon-dim" />}</div>
+                      <div className="coord-info"><span className="coord-label">風脈泉 #{idx + 1}</span><span className="coord-value">{coord}</span></div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </main>
+      </div>
+    </div>
+  );
+}
+
+function WondrousTails() {
+  const [stickers, setStickers] = useState<number[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const navigate = useNavigate();
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  const processImage = (img: HTMLImageElement) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (!ctx) return;
+    const scale = Math.min(1000 / img.width, 1);
+    canvas.width = img.width * scale; canvas.height = img.height * scale;
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    const activePixels: {x: number, y: number, weight: number}[] = [];
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i], g = data[i+1], b = data[i+2];
+      const brightness = (r + g + b) / 3;
+      if (brightness > 140 && r > b && g > b * 0.7) {
+        const pxIdx = i / 4; activePixels.push({ x: pxIdx % canvas.width, y: Math.floor(pxIdx / canvas.width), weight: brightness });
+      }
+    }
+    const clusters: {x: number, y: number, count: number, totalWeight: number}[] = [];
+    activePixels.forEach(p => {
+      let found = false;
+      for (const c of clusters) { if (Math.pow(p.x - c.x, 2) + Math.pow(p.y - c.y, 2) < 1600) { c.x = (c.x * c.count + p.x) / (c.count + 1); c.y = (c.y * c.count + p.y) / (c.count + 1); c.totalWeight += p.weight; c.count++; found = true; break; } }
+      if (!found) clusters.push({...p, count: 1, totalWeight: p.weight});
+    });
+    const topClusters = clusters.sort((a, b) => b.totalWeight - a.totalWeight).slice(0, 9).filter(c => c.count > 25);
+    if (topClusters.length === 0) { setIsProcessing(false); return; }
+    const minX = Math.min(...topClusters.map(c => c.x)), maxX = Math.max(...topClusters.map(c => c.x)), minY = Math.min(...topClusters.map(c => c.y)), maxY = Math.max(...topClusters.map(c => c.y));
+    const results = new Set<number>();
+    topClusters.forEach(c => { const col = Math.min(Math.round(((c.x - minX) / (maxX - minX)) * 3), 3); const row = Math.min(Math.round(((c.y - minY) / (maxY - minY)) * 3), 3); results.add(row * 4 + col); });
+    setStickers(Array.from(results)); setIsProcessing(false);
+  };
+
+  const handlePaste = (e: ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (const item of Array.from(items)) { if (item.type.indexOf('image') !== -1) { const blob = item.getAsFile(); if (blob) { setIsProcessing(true); const img = new Image(); img.src = URL.createObjectURL(blob); img.onload = () => { processImage(img); URL.revokeObjectURL(img.src); }; } } }
+  };
+
+  useEffect(() => { window.addEventListener('paste', handlePaste); return () => window.removeEventListener('paste', handlePaste); }, []);
+  const probs = calculateProbabilities(stickers);
+
+  return (
+    <div className="page-container tails-page fade-in">
+      <nav className="top-nav">
+        <button onClick={() => navigate('/')} className="back-link"><ArrowLeft size={18} /> 返回</button>
+        <div className="tails-info"><Zap size={16} className="icon-gold" /><span>貼上截圖即刻辨識印花</span></div>
+      </nav>
+      <div className="tails-layout">
+        <div className="book-side">
+          <div className="wt-book-ui">
+            <div className="wt-grid-ornament">
+              {Array.from({ length: 16 }).map((_, i) => (
+                <div key={i} className={`wt-cell-rich ${stickers.includes(i) ? 'has-sticker' : ''}`} onClick={() => stickers.includes(i) ? setStickers(stickers.filter(s => s !== i)) : (stickers.length < 9 && setStickers([...stickers, i]))}>
+                  {stickers.includes(i) && <div className="sticker-illustration"><img src="https://ff14.huijiwiki.com/images/thumb/8/84/%E5%BA%93%E6%B4%9B%E7%9A%84%E5%8D%B0%E8%8A%B1.png/60px-%E5%BA%93%E6%B4%9B%E7%9A%84%E5%8D%B0%E8%8A%B1.png" alt="" /></div>}
+                </div>
+              ))}
+            </div>
+            {isProcessing && <div className="wt-loader-overlay"><Loader2 className="animate-spin" size={48} /><span>分析中...</span></div>}
+          </div>
+          <button className="reset-tails" onClick={() => setStickers([])}>清空重置手冊</button>
+        </div>
+        <div className="result-side">
+          <div className="prob-card-rich">
+            <h2 className="prob-title">連線勝率預測</h2>
+            <div className="prob-rows">
+              <div className="prob-row"><span>1 條連線</span><strong>{probs[1]}%</strong></div>
+              <div className="prob-row high-2"><span>2 條連線</span><strong>{probs[2]}%</strong></div>
+              <div className="prob-row high-3"><span>3 條連線</span><strong>{probs[3]}%</strong></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <canvas ref={canvasRef} style={{ display: 'none' }} />
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/aether" element={<AetherTracker />} />
+        <Route path="/tails" element={<WondrousTails />} />
+      </Routes>
+    </Router>
+  );
+}
+
+export default App
