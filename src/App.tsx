@@ -1,12 +1,63 @@
-import { useState, useEffect } from 'react';
-import { HashRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useMemo } from 'react';
+import { HashRouter as Router, Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   BookOpen, ShoppingCart, Swords, Search, ChevronDown, ChevronUp, 
   MapPin, CheckCircle2, Circle, ArrowLeft, BarChart3, 
   ExternalLink, Globe, Library, Database, Box, Map, Clock, 
-  Fish, Banknote, Shirt, Gamepad2, Hammer, Sparkles 
+  Fish, Banknote, Shirt, Gamepad2, Hammer, Sparkles, Copy, Download, Upload
 } from 'lucide-react';
 import './App.css'
+
+// Helper to generate a stable list of all coordinate IDs
+const getAllCoordKeys = () => {
+  const keys: string[] = [];
+  aetherData.forEach(exp => {
+    exp.zones.forEach(zone => {
+      zone.coords.forEach(coord => {
+        keys.push(`${exp.id}-${zone.zone}-${coord}`);
+      });
+    });
+  });
+  return keys;
+};
+
+// Simple bitmask-based sync code logic
+const encodeProgress = (checkedSet: Set<string>): string => {
+  const allKeys = getAllCoordKeys();
+  let binary = "";
+  allKeys.forEach(key => {
+    binary += checkedSet.has(key) ? "1" : "0";
+  });
+  // Pad to multiple of 8
+  while (binary.length % 8 !== 0) binary += "0";
+  
+  const bytes = [];
+  for (let i = 0; i < binary.length; i += 8) {
+    bytes.push(parseInt(binary.substr(i, 8), 2));
+  }
+  return btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+};
+
+const decodeProgress = (code: string): Set<string> => {
+  try {
+    const base64 = code.replace(/-/g, '+').replace(/_/g, '/');
+    const binaryStr = atob(base64);
+    let binary = "";
+    for (let i = 0; i < binaryStr.length; i++) {
+      binary += binaryStr.charCodeAt(i).toString(2).padStart(8, '0');
+    }
+    
+    const allKeys = getAllCoordKeys();
+    const newSet = new Set<string>();
+    allKeys.forEach((key, idx) => {
+      if (binary[idx] === "1") newSet.add(key);
+    });
+    return newSet;
+  } catch (e) {
+    console.error("Failed to decode sync code", e);
+    return new Set();
+  }
+};
 
 const linkCategories = [
   {
@@ -43,12 +94,12 @@ const aetherData = [
   {
     expansion: "7.0 黃金的遺產", id: "7.0",
     zones: [
-      { id: "z7-1", zone: "奧羅帕尼山 (Urqopacha)", coords: ["(X: 28.6, Y: 16.7, Z: 1.1)", "(X: 12.2, Y: 11.5, Z: 1.9)", "(X: 17.9, Y: 20.5, Z: 1.2)", "(X: 17.3, Y: 17.4, Z: 1.5)", "(X: 28.8, Y: 7.8, Z: 0.8)", "(X: 18.7, Y: 9.7, Z: 1.2)", "(X: 29.1, Y: 21.3, Z: 2.8)", "(X: 29.4, Y: 26.6, Z: 3)"] },
-      { id: "z7-2", zone: "克扎爾烏卡濕地 (Kozama'uka)", coords: ["(X: 27.3, Y: 7.6, Z: 0)", "(X: 9.8, Y: 17.9, Z: 0)", "(X: 15.5, Y: 34.2, Z: 1.1)", "(X: 8.6, Y: 11.7, Z: 0)", "(X: 39.6, Y: 13.6, Z: 0.1)", "(X: 31.8, Y: 14.5, Z: 1.3)", "(X: 24, Y: 31.9, Z: 1.1)", "(X: 31.3, Y: 38, Z: 1.2)"] },
-      { id: "z7-3", zone: "亞克特爾樹海 (Yak T'el)", coords: ["(X: 19.1, Y: 11, Z: 3)", "(X: 29.7, Y: 10.6, Z: 3.1)", "(X: 19.2, Y: 33.8, Z: 0.8)", "(X: 10.2, Y: 18.6, Z: 2.9)", "(X: 17.7, Y: 6.3, Z: 3.2)", "(X: 33.9, Y: 26.2, Z: 1.5)", "(X: 25.4, Y: 24.4, Z: 1)", "(X: 36.3, Y: 35.4, Z: 1.2)"] },
-      { id: "z7-4", zone: "夏勞尼荒野 (Shaaloani)", coords: ["(X: 27.3, Y: 31.6, Z: 0.7)", "(X: 7.2, Y: 19.8, Z: 1)", "(X: 20.1, Y: 17.7, Z: 0.9)", "(X: 28.1, Y: 14.3, Z: 1.1)", "(X: 17.6, Y: 20.4, Z: 1.1)", "(X: 8.6, Y: 27.9, Z: 0.6)", "(X: 34, Y: 27.9, Z: 0.8)", "(X: 34.3, Y: 22.9, Z: 0.9)"] },
-      { id: "z7-5", zone: "遺產之地 (Heritage Found)", coords: ["(X: 29.4, Y: 26, Z: 1.6)", "(X: 25.6, Y: 8.3, Z: 0.7)", "(X: 9.7, Y: 12.1, Z: 0.3)", "(X: 33.6, Y: 17.6, Z: 1.4)", "(X: 35.2, Y: 11.1, Z: 1.5)", "(X: 15.8, Y: 16.1, Z: 0.5)", "(X: 15.8, Y: 16.1, Z: 0.7)", "(X: 12.5, Y: 35.4, Z: 0)"] },
-      { id: "z7-6", zone: "活著的記憶 (Living Memory)", coords: ["(X: 7.6, Y: 30.8, Z: 0.2)", "(X: 36.4, Y: 28.3, Z: 0.6)", "(X: 10.8, Y: 8.3, Z: 0.5)", "(X: 25.9, Y: 32.6, Z: 0.2)", "(X: 33.7, Y: 34.3, Z: 0.2)", "(X: 27.6, Y: 10.5, Z: 0.2)", "(X: 27.6, Y: 10.5, Z: 0.5)", "(X: 12.1, Y: 20.5, Z: 0.5)"] }
+      { id: "z7-1", zone: "奧羅帕尼山 (Urqopacha)", coords: ["(X: 28.5, Y: 16.7)", "(X: 12.3, Y: 11.6)", "(X: 18.7, Y: 9.8)", "(X: 17.4, Y: 17.5)", "(X: 29.7, Y: 7.8)", "(X: 29.4, Y: 26.7) - 山上", "(X: 28.8, Y: 21.3) - 山上", "(X: 17.5, Y: 20.3) - 山上", "(X: 5.2, Y: 23.5)", "(X: 22.8, Y: 36.4) - 遠"] },
+      { id: "z7-2", zone: "克扎爾烏卡濕地 (Kozama'uka)", coords: ["(X: 27.4, Y: 7.7)", "(X: 31.8, Y: 14.5)", "(X: 39.8, Y: 13.3)", "(X: 9.4, Y: 17.8)", "(X: 8.7, Y: 11.7)", "(X: 22.4, Y: 27.2)", "(X: 24.0, Y: 31.9)", "(X: 15.6, Y: 34.2)", "(X: 6.2, Y: 23.9)", "(X: 31.2, Y: 38.7) - 難找"] },
+      { id: "z7-3", zone: "亞克特爾樹海 (Yak T'el)", coords: ["(X: 19.1, Y: 10.9)", "(X: 10.4, Y: 18.7)", "(X: 17.7, Y: 6.4)", "(X: 29.8, Y: 10.5)", "(X: 36.4, Y: 35.7) - 地下湖邊", "(X: 33.6, Y: 26.1) - 山頂", "(X: 19.1, Y: 33.9)", "(X: 7.9, Y: 26.2)", "(X: 22.2, Y: 21.4) - 遠", "(X: 25.5, Y: 24.7) - 稍遠"] },
+      { id: "z7-4", zone: "夏勞尼荒野 (Shaaloani)", coords: ["(X: 27.3, Y: 31.5)", "(X: 17.6, Y: 20.4)", "(X: 20.2, Y: 17.9)", "(X: 25.1, Y: 20.2)", "(X: 9.4, Y: 14.4)", "(X: 7.2, Y: 19.8)", "(X: 9.0, Y: 27.9) - 峽谷深處(遠)", "(X: 29.0, Y: 11.3)", "(X: 34.6, Y: 23.1)", "(X: 34.4, Y: 13.0)"] },
+      { id: "z7-5", zone: "遺產之地 (Heritage Found)", coords: ["(X: 29.4, Y: 25.9)", "(X: 23.0, Y: 18.5) - 山上", "(X: 35.1, Y: 11.1) - 山上(遠)", "(X: 33.6, Y: 17.6) - 山上", "(X: 25.5, Y: 7.9) - 洞裡(遠)", "(X: 9.7, Y: 12.0)", "(X: 9.4, Y: 26.8)", "(X: 20.9, Y: 28.1) - 山上", "(X: 12.3, Y: 35.3) - 稍遠", "(X: 15.7, Y: 16.1) - 山上(遠)"] },
+      { id: "z7-6", zone: "活著的記憶 (Living Memory)", coords: ["(X: 7.4, Y: 30.9)", "(X: 11.1, Y: 35.0)", "(X: 36.5, Y: 28.4) - 稍遠", "(X: 34.0, Y: 34.2) - 摩天輪中間", "(X: 26.1, Y: 32.3) - 塔狀建築下", "(X: 24.8, Y: 15.3) - 競技場邊緣下", "(X: 11.7, Y: 20.4)", "(X: 10.2, Y: 11.3)", "(X: 27.7, Y: 10.6) - 遠", "(X: 31.6, Y: 8.4) - 遠"] }
     ]
   },
   {
@@ -114,10 +165,26 @@ function AetherTracker() {
   const [activeExpId, setActiveExpId] = useState("7.0");
   const [activeZoneId, setActiveZoneId] = useState("z7-1");
   const navigate = useNavigate();
+  const location = useLocation();
 
+  // Load from localStorage and URL
   useEffect(() => {
     const saved = localStorage.getItem('ff14-aether-progress');
-    if (saved) setCheckedCoords(new Set(JSON.parse(saved)));
+    let initialSet = new Set<string>();
+    if (saved) initialSet = new Set(JSON.parse(saved));
+
+    const params = new URLSearchParams(location.search);
+    const urlSync = params.get('sync');
+    if (urlSync) {
+      const decoded = decodeProgress(urlSync);
+      if (decoded.size > 0) {
+        initialSet = new Set([...Array.from(initialSet), ...Array.from(decoded)]);
+        // Clean URL
+        navigate(location.pathname, { replace: true });
+      }
+    }
+    
+    setCheckedCoords(initialSet);
   }, []);
 
   const toggleCoord = (coordId: string) => {
@@ -156,8 +223,36 @@ function AetherTracker() {
     }
   }, [activeExpId]);
 
-  const totalCoords = aetherData.reduce((sum, exp) => sum + exp.zones.reduce((zSum, zone) => zSum + zone.coords.length, 0), 0);
+  const totalCoords = useMemo(() => aetherData.reduce((sum, exp) => sum + exp.zones.reduce((zSum, zone) => zSum + zone.coords.length, 0), 0), []);
   const progressPercent = Math.round((checkedCoords.size / totalCoords) * 100);
+
+  const handleExport = () => {
+    const code = encodeProgress(checkedCoords);
+    navigator.clipboard.writeText(code);
+    alert("同步代碼已複製到剪貼簿！");
+  };
+
+  const handleImport = () => {
+    const input = prompt("請貼入同步代碼：");
+    if (input) {
+      const decoded = decodeProgress(input.trim());
+      if (decoded.size > 0) {
+        if (confirm(`成功解析到 ${decoded.size} 個進度，是否覆蓋目前進度？`)) {
+          setCheckedCoords(decoded);
+          localStorage.setItem('ff14-aether-progress', JSON.stringify(Array.from(decoded)));
+        }
+      } else {
+        alert("代碼無效或格式錯誤。");
+      }
+    }
+  };
+
+  const handleCopyLink = () => {
+    const code = encodeProgress(checkedCoords);
+    const url = `${window.location.origin}${window.location.pathname}#/aether?sync=${code}`;
+    navigator.clipboard.writeText(url);
+    alert("帶有進度的分享連結已複製！");
+  };
 
   return (
     <div className="page-container aether-page fade-in">
@@ -167,6 +262,11 @@ function AetherTracker() {
           {aetherData.map(exp => (
             <button key={exp.id} className={`exp-tab ${activeExpId === exp.id ? 'active' : ''}`} onClick={() => setActiveExpId(exp.id)}>{exp.expansion}</button>
           ))}
+        </div>
+        <div className="sync-group">
+          <button className="sync-btn" title="導出同步碼" onClick={handleExport}><Download size={18} /></button>
+          <button className="sync-btn" title="導入同步碼" onClick={handleImport}><Upload size={18} /></button>
+          <button className="sync-btn" title="複製分享連結" onClick={handleCopyLink}><Copy size={18} /></button>
         </div>
         <div className="progress-mini"><BarChart3 size={16} className="icon-gold" /><span>進度 {progressPercent}%</span></div>
       </nav>
