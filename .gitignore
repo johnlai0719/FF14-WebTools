@@ -28,9 +28,12 @@ dev-debug.log
 node_modules/
 # Environment variables
 .env
+.env.example
 .vscode
-# OS specific
 
-# Task files
-# tasks.json
-# tasks/ 
+# AI/Task Tools
+.taskmaster/
+.gemini/
+GEMINI.md
+CLAUDE.md
+memory/
